@@ -58,16 +58,16 @@
       </ol>
 
       <h2 id="ja-about">1. このアプリについて</h2>
-      <p>日本のすべての新幹線と、日本の上空の飛行機・近海の旅客船の「いまどこにいるか」を地図に表示するアプリです。スマホでも PC でも使えます。</p>
+      <p>日本のすべての新幹線と、日本の上空の飛行機・近海の船の「いまどこにいるか」を地図に表示するアプリです。スマホでも PC でも使えます。</p>
       <p>新幹線の位置は、運転パターンから作った<strong>推定時刻表</strong>をもとに計算しています。実際のダイヤ・遅延・運休は反映されず、本数・時刻・停車駅・号数も実際とは異なります。実際の時刻や運行状況は、各社の公式の時刻表・運行情報で確認してください。</p>
 
       <h2 id="ja-screen">2. 画面の見かた</h2>
       <ul>
-        <li><strong>上の帯</strong>：アプリ名、時刻と「新幹線の本数・✈飛行機の数・⛴旅客船の数」、右上に Google ログインのボタン。</li>
+        <li><strong>上の帯</strong>：アプリ名、時刻と「新幹線の本数・✈飛行機の数・⛴船の数」、右上に Google ログインのボタン。</li>
         <li><strong>時刻</strong>をタップすると、表示する時刻を変えたり、×10・×60 で早送りしたりできます（夜の確認用）。</li>
         <li><span class="icon">▲</span><strong>新幹線</strong>：路線の色の細い三角で、進行方向を向いています。駅に止まっている列車は、のりばのように並べています（推定）。</li>
         <li><span class="icon">✈</span><strong>飛行機</strong>：国内線は黄色、国際線はピンク。機首が進行方向です。</li>
-        <li><span class="icon">⛴</span><strong>旅客船</strong>：濃い水色の、上から見た船の形。船首が進行方向です。少し薄い船は、時刻表から推定したフェリーです。</li>
+        <li><span class="icon">⛴</span><strong>船</strong>：上から見た船の形で、船首が進行方向です。茶色は貨物船（タンカーを含む）、濃い水色はそれ以外の船（旅客船・漁船・作業船・船種不明など）。少し薄い船は、時刻表から推定したフェリーです。</li>
         <li><strong>駅・空港</strong>：拡大すると名前が出ます。空港の名前の下は空港コード（HND など）です。</li>
         <li>トラッキング中・お気に入りのものは、アイコンの白い縁取りが太くなり、縮小しても名前が出ます。</li>
         <li>破線の内側が表示範囲（陸地を含む日本の排他的経済水域）です。</li>
@@ -76,7 +76,7 @@
 
       <h2 id="ja-menu">3. 下のメニュー</h2>
       <ul>
-        <li><strong>フィルター</strong>：雨雲・国内線・国際線・旅客船・各路線の表示を切り替えます。</li>
+        <li><strong>フィルター</strong>：雨雲・国内線・国際線・貨物船・その他の船・各路線の表示を切り替えます。</li>
         <li><strong>検索</strong>：駅・空港（空港コードも可）・走っている列車（のぞみ1 など）・便名（NH20 など）・船名で探し、タップするとその場所へ移ります。</li>
         <li><strong>現在地</strong>：自分のいる場所へ移ります（位置情報の許可が必要です）。</li>
         <li><strong>マイリスト</strong>：トラッキング中の列車・飛行機・船と、お気に入りの駅の一覧です（ログインが必要）。</li>
@@ -94,7 +94,7 @@
       <h2 id="ja-login">5. ログインとマイリスト</h2>
       <p>見るだけなら、ログインは要りません（ゲスト）。ログインすると、次のことができます。</p>
       <ul>
-        <li>飛行機と旅客船を<strong>5分より長く</strong>見る（ゲストは、ページを開いてから5分で止まります）。</li>
+        <li>飛行機と船を<strong>5分より長く</strong>見る（ゲストは、ページを開いてから5分で止まります）。</li>
         <li>列車・飛行機・船の<strong>トラッキング</strong>と、<strong>お気に入りの駅</strong>の登録（情報の画面の ☆ を押す）。</li>
         <li>言語・表示モード・表示の切り替えの設定を保存し、ほかの端末でも同じ設定で使う。</li>
       </ul>
@@ -128,7 +128,7 @@
         <li>新幹線の路線・駅、空港：国土数値情報（鉄道データ・空港データ）国土交通省 を加工して作成。</li>
         <li>地図：国土地理院（地図の地名は日本語です）。</li>
         <li>飛行機：航空機が発信する ADS-B を有志が受信して公開しているデータ（<a href="https://adsb.lol" target="_blank" rel="noopener">adsb.lol</a>、ODbL）。30秒ごとに更新し、その間は速度と向きから位置を進めています。受信局のない空域の機体は表示されません。国内線・国際線は便名の経路（<a href="https://www.adsbdb.com" target="_blank" rel="noopener">adsbdb</a>）から判定し、わからない場合は航空会社や登録国から推定しています。</li>
-        <li>旅客船：船が発信する AIS を有志が受信して公開しているデータ（<a href="https://aisstream.io" target="_blank" rel="noopener">aisstream.io</a>）。受信局のない海域の船や、AIS を発信していない船は表示されません。</li>
+        <li>船：船が発信する AIS を有志が受信して公開しているデータ（<a href="https://aisstream.io" target="_blank" rel="noopener">aisstream.io</a>）。受信局のない海域の船や、AIS を発信していない船は表示されません。貨物船かどうかは船が送る船種で分けます。船種はしばらく受信しないと分からないため、分かるまでは「その他の船」に入ります。</li>
         <li>フェリー（推定）：日本近海の沖合や離島の航路は AIS の受信局がほとんどないため、主要なフェリー航路（約90航路）は各社の時刻表から位置を推定して表示します。航路の線は推定で、欠航・遅れ・臨時便・ダイヤの変更は反映されません。AIS で実際の位置が届いている船は、そちらを表示します。</li>
         <li>雨雲：<a href="https://www.jma.go.jp/bosai/nowc/" target="_blank" rel="noopener">気象庁の雨雲の動き（高解像度降水ナウキャスト）</a>の実況を、ブラウザから直接読み込んで表示しています。電波のない場所では表示されません。</li>
         <li>空港の発着：上の飛行機のデータ（adsb.lol・adsbdb）を、このアプリの中継サーバーが2分ごとに観測して作った推定です。</li>
@@ -153,7 +153,7 @@
 
       <div class="donate-part">
       <h2 id="ja-donate">11. 運営資金のご協力</h2>
-      <p>のりものレーダーは、無料・広告なしで公開しています。中継サーバーやドメインなど、続けるための費用は作者が負担しています。アプリを気に入っていただけたら、コーヒー1杯分の <strong>200円</strong> からご支援いただけるとうれしいです。</p>
+      <p>のりものレーダーは、無料で公開しています（ウェブ版には、画面の下に広告を表示することがあります）。中継サーバーやドメインなど、続けるための費用は作者が負担しています。アプリを気に入っていただけたら、コーヒー1杯分の <strong>200円</strong> からご支援いただけるとうれしいです。</p>
       <div class="donate">
         <h3>PayPal で安全にご支援いただけます</h3>
         <form action="https://www.paypal.com/jp/cgi-bin/webscr" method="post" target="_blank">
@@ -193,16 +193,16 @@
       </ol>
 
       <h2 id="en-about">1. About</h2>
-      <p>A map showing where all of Japan's Shinkansen trains, flights over Japan and ferries in nearby waters are right now. Works on phones and PCs.</p>
+      <p>A map showing where all of Japan's Shinkansen trains, flights over Japan and ships in nearby waters are right now. Works on phones and PCs.</p>
       <p>Train positions are calculated from an <strong>estimated timetable</strong> built from typical service patterns. Actual schedules, delays and cancellations are not reflected, and the number of trains, times, stops and train numbers differ from the real ones. Please check each operator's official timetable and service information for actual times and status.</p>
 
       <h2 id="en-screen">2. The screen</h2>
       <ul>
-        <li><strong>Top bar</strong>: app name, the time with the number of trains, ✈ flights and ⛴ ferries, and the Google sign-in button at the top right.</li>
+        <li><strong>Top bar</strong>: app name, the time with the number of trains, ✈ flights and ⛴ ships, and the Google sign-in button at the top right.</li>
         <li>Tap the <strong>time</strong> to change the displayed time or fast-forward ×10 / ×60.</li>
         <li><span class="icon">▲</span><strong>Trains</strong>: thin triangles in the line's color, pointing in the direction of travel. Trains stopped at a station are lined up like platforms (estimated).</li>
         <li><span class="icon">✈</span><strong>Flights</strong>: yellow for domestic, pink for international, nose in the direction of travel.</li>
-        <li><span class="icon">⛴</span><strong>Ferries</strong>: dark light-blue ships seen from above, bow in the direction of travel. Paler ships are ferries estimated from timetables.</li>
+        <li><span class="icon">⛴</span><strong>Ships</strong>: seen from above, bow in the direction of travel. Brown is cargo (including tankers); dark light-blue is everything else (passenger, fishing, work boats, unknown type, etc.). Paler ships are ferries estimated from timetables.</li>
         <li><strong>Stations and airports</strong>: names appear when you zoom in. The code under an airport name is its airport code (e.g. HND).</li>
         <li>Tracked and favorite items have a thicker white outline and keep their names when zoomed out.</li>
         <li>The covered area is inside the dashed line (Japan's EEZ including land).</li>
@@ -211,10 +211,10 @@
 
       <h2 id="en-menu">3. Bottom menu</h2>
       <ul>
-        <li><strong>Filter</strong>: show or hide rain, domestic and international flights, ferries and each line.</li>
+        <li><strong>Filter</strong>: show or hide rain, domestic and international flights, cargo, other ships and each line.</li>
         <li><strong>Search</strong>: find stations, airports (codes too), running trains (e.g. Nozomi 1), flights (e.g. NH20) or ships, then tap to go there.</li>
         <li><strong>Location</strong>: move to where you are (location permission needed).</li>
-        <li><strong>My list</strong>: your tracked trains, flights and ferries and favorite stations (sign-in needed).</li>
+        <li><strong>My list</strong>: your tracked trains, flights and ships and favorite stations (sign-in needed).</li>
         <li><strong>Settings</strong>: account, language, appearance (light / dark), current settings and this help.</li>
       </ul>
 
@@ -229,8 +229,8 @@
       <h2 id="en-login">5. Sign-in and My list</h2>
       <p>You can view everything without signing in (as a guest). Signing in lets you:</p>
       <ul>
-        <li>View flights and ferries for <strong>longer than 5 minutes</strong> (for guests they stop 5 minutes after opening the page).</li>
-        <li><strong>Track</strong> trains, flights and ferries and save <strong>favorite stations</strong> (press ☆ on their information).</li>
+        <li>View flights and ships for <strong>longer than 5 minutes</strong> (for guests they stop 5 minutes after opening the page).</li>
+        <li><strong>Track</strong> trains, flights and ships and save <strong>favorite stations</strong> (press ☆ on their information).</li>
         <li>Save your language, appearance and layer settings and use them on your other devices.</li>
       </ul>
       <h3>How to sign in</h3>
@@ -263,7 +263,7 @@
         <li>Shinkansen lines, stations and airports: National Land Numerical Information (MLIT), processed.</li>
         <li>Base map: GSI Japan (place names on the map are in Japanese).</li>
         <li>Flights: ADS-B data received and shared by volunteers (<a href="https://adsb.lol" target="_blank" rel="noopener">adsb.lol</a>, ODbL), updated every 30 seconds and moved forward by speed and heading in between. Aircraft in areas without receivers are not shown. Domestic / international is judged from the flight's route (<a href="https://www.adsbdb.com" target="_blank" rel="noopener">adsbdb</a>), or from the airline and country of registration when unknown.</li>
-        <li>Ferries: AIS data received and shared by volunteers (<a href="https://aisstream.io" target="_blank" rel="noopener">aisstream.io</a>). Ships in areas without receivers, or without AIS, are not shown.</li>
+        <li>Ships: AIS data received and shared by volunteers (<a href="https://aisstream.io" target="_blank" rel="noopener">aisstream.io</a>). Ships in areas without receivers, or without AIS, are not shown. Cargo is identified from the ship type each ship broadcasts; until a ship's type has been received it is listed under Other ships.</li>
         <li>Ferries (estimated): AIS receivers rarely cover Japan's offshore and island routes, so major ferry routes (about 90) are shown at positions estimated from each operator's timetable. Route lines are approximate, and cancellations, delays, extra sailings and timetable changes are not reflected. Ships whose real position is received by AIS are shown from AIS instead.</li>
         <li>Rain: current observations from the <a href="https://www.jma.go.jp/bosai/nowc/" target="_blank" rel="noopener">Japan Meteorological Agency's high-resolution precipitation nowcast</a>, loaded directly by your browser. Not shown without a connection.</li>
         <li>Airport flights: estimates made by this app's relay server, which observes the flight data above (adsb.lol, adsbdb) every 2 minutes.</li>
@@ -288,7 +288,7 @@
 
       <div class="donate-part">
       <h2 id="en-donate">11. Support the app</h2>
-      <p>Norimono Radar is free and has no ads. The author pays for the relay server, the domain and other running costs. If you like the app, a donation from <strong>200 yen</strong> (about a cup of coffee) would be greatly appreciated.</p>
+      <p>Norimono Radar is free (the web version may show an ad at the bottom of the screen). The author pays for the relay server, the domain and other running costs. If you like the app, a donation from <strong>200 yen</strong> (about a cup of coffee) would be greatly appreciated.</p>
       <div class="donate">
         <h3>Donate securely with PayPal</h3>
         <form action="https://www.paypal.com/jp/cgi-bin/webscr" method="post" target="_blank">

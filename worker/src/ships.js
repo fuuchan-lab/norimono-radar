@@ -1,4 +1,4 @@
-// 日本近海の旅客船を aisstream.io の AIS データから集める。
+// 日本近海の船（船種を問わない）を aisstream.io の AIS データから集める。
 // 位置と船種は別のメッセージで届く（船種は約6分おき）ため、接続を保ったまま貯めておく。
 
 import { FlightLog } from './flights.js';
@@ -8,10 +8,9 @@ const AIS_URL = 'wss://stream.aisstream.io/v0/stream';
 const BOX = [[17.0, 122.0], [48.0, 158.0]];
 const MESSAGE_TYPES = ['PositionReport', 'StandardClassBPositionReport', 'ExtendedClassBPositionReport', 'ShipStaticData', 'StaticDataReport'];
 const STALE_MS = 15 * 60 * 1000;
-const isPassenger = (type) => type >= 60 && type <= 69;
-// 日本近海は受信局が少なく船種が届きにくいので、船種が不明でも船名から定期旅客船と分かる船は含める
-const PASSENGER_NAME = /FERRY|JETFOIL|JET ?FOIL|HIGH ?SPEED|フェリー|ジェットフォイル/i;
-const looksPassenger = (s, name) => (s?.type ? isPassenger(s.type) : PASSENGER_NAME.test(name));
+// 船名・船種を保存しておく上限（1 つの値は 128KB までなので 1,000 隻ずつに分ける）
+const STATICS_MAX = 5000;
+const STATICS_CHUNK = 1000;
 
 export class ShipStore {
   /** MMSI -> 位置 */
@@ -57,30 +56,13 @@ export class ShipStore {
     this.statics.set(mmsi, cur);
   }
 
-  /** [MMSI, 船名, 緯度, 経度, 速力kn, 針路, 船首方位, 船種, 行先, 位置の古さ秒, 全長m] */
-  passengers() {
-    const now = Date.now();
-    const out = [];
-    for (const [mmsi, p] of this.positions) {
-      if (now - p.at > STALE_MS) {
-        this.positions.delete(mmsi);
-        continue;
-      }
-      const s = this.statics.get(mmsi);
-      const name = s?.name || p.name || '';
-      if (!looksPassenger(s, name)) continue;
-      out.push([
-        mmsi, name, round(p.lat, 5), round(p.lon, 5), p.sog ?? null,
-        p.cog != null && p.cog < 360 ? p.cog : null,
-        p.hdg != null && p.hdg < 360 ? p.hdg : null,
-        s?.type ?? 60, s?.dest ?? '', Math.round((now - p.at) / 1000), s?.len || null,
-      ]);
-    }
-    return out;
+  /** すべての船。[MMSI, 船名, 緯度, 経度, 速力kn, 針路, 船首方位, 船種（不明は 0）, 行先, 位置の古さ秒, 全長m] */
+  all() {
+    return this.inBox({ s: BOX[0][0], w: BOX[0][1], n: BOX[1][0], e: BOX[1][1] });
   }
 
   /**
-   * 海ログ（OceanLog）用: 範囲内のすべての船（船種を問わない）。行の形は passengers() と同じ。船種が不明なら 0
+   * 範囲内のすべての船（船種を問わない）。行の形は all() と同じ。船種が不明なら 0（海ログ（OceanLog）でも使う）
    * box: { s, w, n, e }
    */
   inBox(box) {
@@ -103,9 +85,10 @@ export class ShipStore {
     return out;
   }
 
-  /** 保存用: 旅客船の船名・船種だけ（再起動後すぐ表示できるように） */
-  passengerStatics() {
-    return [...this.statics].filter(([, s]) => isPassenger(s.type));
+  /** 保存用: 船種が分かっている船の船名・船種・全長（再起動後すぐ貨物船かどうかを分けられるように）。新しく覚えたものを優先 */
+  savedStatics() {
+    const rows = [...this.statics].filter(([, s]) => s.type).map(([mmsi, s]) => [mmsi, { name: s.name, type: s.type, len: s.len }]);
+    return rows.slice(-STATICS_MAX);
   }
 }
 
@@ -177,10 +160,11 @@ export async function connect(apiKey, store, onClose) {
 }
 
 // 船種は約6分おきにしか届かず、日本近海では届かないことも多いので、誰も見ていなくても接続を保って
-// 旅客船の船名・船種を貯めておく（無料枠: 128MB × 24時間 ≒ 10,800 GB 秒/日。上限は 13,000）
+// 船名・船種を貯めておく（無料枠: 128MB × 24時間 ≒ 10,800 GB 秒/日。上限は 13,000）
 const ALARM_MS = 30 * 1000;
-// 便の観測（flights.js）は、書き込みの回数を抑えるため 5 分ごとにまとめて保存する（1 回の put は 128 件まで）
+// 便の観測（flights.js）と船名・船種は、書き込みの回数を抑えるため 5 分ごとにまとめて保存する（1 回の put は 128 件まで）
 const FLIGHT_SAVE_MS = 5 * 60 * 1000;
+const STATICS_SAVE_MS = 5 * 60 * 1000;
 
 /** AIS への接続を保つ Durable Object（日本全体で1つ）。空港の発着のふだんの時刻（flights.js）もここで覚える */
 export class ShipTracker {
@@ -190,10 +174,13 @@ export class ShipTracker {
     this.store = new ShipStore();
     this.flights = new FlightLog();
     this.flightsSavedAt = Date.now();
+    this.staticsSavedAt = Date.now();
     this.ws = null;
     state.blockConcurrencyWhile(async () => {
-      const saved = await state.storage.get('statics');
-      if (saved) this.store.statics = new Map(saved);
+      // 以前は旅客船だけを 'statics' に保存していた
+      const legacy = (await state.storage.get('statics')) ?? [];
+      const chunks = [...(await state.storage.list({ prefix: 'st:' })).values()];
+      this.store.statics = new Map([...legacy, ...chunks.flat()]);
       this.flights.load(await state.storage.list({ prefix: 'f:' }));
     });
   }
@@ -231,7 +218,7 @@ export class ShipTracker {
       if (!box) return Response.json({ error: 'bad bbox' }, { status: 400 });
       return Response.json({ now: Date.now(), connected: !!this.ws, ships: this.store.inBox(box) });
     }
-    const ships = this.store.passengers();
+    const ships = this.store.all();
     return Response.json({
       now: Date.now(),
       connected: !!this.ws,
@@ -242,10 +229,19 @@ export class ShipTracker {
   }
 
   async alarm() {
-    await this.state.storage.put('statics', this.store.passengerStatics());
+    if (Date.now() - this.staticsSavedAt > STATICS_SAVE_MS) await this.saveStatics();
     if (Date.now() - this.flightsSavedAt > FLIGHT_SAVE_MS) await this.saveFlights();
     await this.ensureConnected();
     await this.state.storage.setAlarm(Date.now() + ALARM_MS);
+  }
+
+  async saveStatics() {
+    const rows = this.store.savedStatics();
+    const chunks = {};
+    for (let i = 0; i * STATICS_CHUNK < STATICS_MAX; i++) chunks[`st:${i}`] = rows.slice(i * STATICS_CHUNK, (i + 1) * STATICS_CHUNK);
+    await this.state.storage.put(chunks);
+    await this.state.storage.delete('statics');
+    this.staticsSavedAt = Date.now();
   }
 
   async saveFlights() {

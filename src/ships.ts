@@ -1,4 +1,4 @@
-// 旅客船（Cloudflare Worker 経由で aisstream.io の AIS データから取得）
+// 船（Cloudflare Worker 経由で aisstream.io の AIS データから取得。船種を問わずすべて）
 import { bearing, deadReckon, LIVE_API, movedKm } from './aircraft';
 import type { LngLat } from './data';
 
@@ -50,3 +50,19 @@ function parseShips(data: { now: number; ships: Row[] }, prev: Ship[]): Ship[] {
 export const shipAt = (s: Ship, ms: number): LngLat => (s.moving ? deadReckon(s.lon, s.lat, s.sog, s.heading, ms - s.at) : [s.lon, s.lat]);
 
 export const shipLabel = (s: Ship) => s.name || `MMSI ${s.mmsi}`;
+
+/** 貨物船（AIS の船種 70〜79）とタンカー（80〜89） */
+export const isCargo = (type: number) => type >= 70 && type <= 89;
+
+/** AIS の船種の分類（画面の表示名は i18n の shipTypes） */
+export type ShipKind = 'passenger' | 'cargo' | 'tanker' | 'fishing' | 'tug' | 'pleasure' | 'other' | 'unknown';
+export function shipKind(type: number): ShipKind {
+  if (type >= 60 && type <= 69) return 'passenger';
+  if (type >= 70 && type <= 79) return 'cargo';
+  if (type >= 80 && type <= 89) return 'tanker';
+  if (type === 30) return 'fishing';
+  if (type === 31 || type === 32 || type === 52) return 'tug';
+  if (type === 36 || type === 37) return 'pleasure';
+  if (!type) return 'unknown';
+  return 'other';
+}

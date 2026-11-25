@@ -401,7 +401,7 @@ html:not([lang='en']) [data-lang='en'], html[lang='en'] [data-lang='ja'] { displ
 
 /* ---- ゲストの表示時間が終わったときの案内 ---- */
 .live-notice {
-  position: fixed; z-index: 15; left: 8px; right: 8px; bottom: calc(var(--nav-h, var(--safe-bottom)) + 8px);
+  position: fixed; z-index: 15; left: 8px; right: 8px; bottom: calc(var(--nav-h, var(--safe-bottom)) + var(--ad-h, 0px) + 8px);
   padding: 12px 14px; border-radius: var(--radius); background: var(--glass); box-shadow: var(--shadow);
   backdrop-filter: blur(8px); font-size: 13px; line-height: 1.6;
 }
@@ -424,16 +424,24 @@ html:not([lang='en']) [data-lang='en'], html[lang='en'] [data-lang='ja'] { displ
 }
 .bottom-nav svg { width: 23px; height: 23px; }
 .bottom-nav button.on { color: var(--link); }
+/* 画面の下の広告（src/ads.ts。ID が入っている時だけ作られる）。スマホは、メニューの真上 */
+.ad-banner {
+  position: fixed; left: 0; right: 0; bottom: var(--nav-h); z-index: 24;
+  max-height: 100px; overflow: hidden; text-align: center;
+  background: var(--glass); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
+}
+.ad-banner ins { display: block; max-height: 100px; }
+.ad-banner:not(:has(ins[data-ad-status='filled'])) { visibility: hidden; }
 /* 現在地はメニューから。地図の現在地ボタンは隠す */
 .maplibregl-ctrl-group:has(.maplibregl-ctrl-geolocate) { display: none; }
 /* 路線・飛行機・船の表示のボタンは、フィルターのパネルの中だけに置く */
 #filter-slot .line-filter { display: flex; }
 @media (max-width: 767px) {
   /* シート・パネル・地図のボタンは、メニューの上に出す */
-  .sheet { bottom: var(--nav-h); max-height: 50vh; padding-bottom: 16px; }
-  .popover { bottom: calc(var(--nav-h) + 8px); max-height: calc(100vh - var(--nav-h) - 110px); }
+  .sheet { bottom: calc(var(--nav-h) + var(--ad-h, 0px)); max-height: 50vh; padding-bottom: 16px; }
+  .popover { bottom: calc(var(--nav-h) + var(--ad-h, 0px) + 8px); max-height: calc(100vh - var(--nav-h) - var(--ad-h, 0px) - 110px); }
   .popover.search { top: calc(8px + var(--safe-top)); bottom: auto; }
-  .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { margin-bottom: var(--nav-h); }
+  .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left { margin-bottom: calc(var(--nav-h) + var(--ad-h, 0px)); }
 }
 @media (min-width: 768px) {
   :root { --nav-h: 0px; }
@@ -442,7 +450,9 @@ html:not([lang='en']) [data-lang='en'], html[lang='en'] [data-lang='ja'] { displ
     border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
   }
   .bottom-nav button:hover { color: var(--fg); }
-  .maplibregl-ctrl-bottom-right { margin-bottom: 8px; }
+  .maplibregl-ctrl-bottom-right { margin-bottom: calc(8px + var(--ad-h, 0px)); }
+  /* PC は、下の中央に浮かせたメニューの上に置く */
+  .ad-banner { bottom: 84px; left: 50%; right: auto; transform: translateX(-50%); width: min(468px, 100%); border: 1px solid var(--line); border-radius: 12px; }
 }
 
 /* ---- ヘルプ・プライバシーポリシーを重ねて表示（右上の × で元の画面に戻る） ---- */

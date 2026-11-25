@@ -36,12 +36,13 @@ const plane = (color: string, o: Outline) => `
     transform="translate(.5 0)" fill="${color}" stroke="#fff" stroke-width="${[2.6, 4.6][o]}" stroke-linejoin="round" paint-order="stroke"/>
 </svg>`;
 
-// 旅客船: 上から見た船体（船首が上）。濃い水色
+// 船: 上から見た船体（船首が上）。貨物船（タンカーを含む）は茶色、それ以外は濃い水色
 export const SHIP_COLOR = '#0088cc';
-const ship = (o: Outline) => `
+export const CARGO_COLOR = '#8a6334';
+const ship = (color: string, o: Outline) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="38" viewBox="-1 -1 18 38">
   <path d="M8 1.5C11.6 6 13.5 10.5 13.5 15.5V31.5Q13.5 34.5 10.5 34.5H5.5Q2.5 34.5 2.5 31.5V15.5C2.5 10.5 4.4 6 8 1.5Z"
-    fill="${SHIP_COLOR}" stroke="#fff" stroke-width="${[3, 5][o]}" stroke-linejoin="round" paint-order="stroke"/>
+    fill="${color}" stroke="#fff" stroke-width="${[3, 5][o]}" stroke-linejoin="round" paint-order="stroke"/>
   <rect x="5" y="17" width="6" height="9" rx="1.2" fill="#fff" fill-opacity=".9"/>
   <path d="M8 6.5L10 11H6z" fill="#fff" fill-opacity=".75"/>
 </svg>`;
@@ -56,7 +57,7 @@ async function svgImage(svg: string, scale: number): Promise<HTMLImageElement> {
 }
 
 /**
- * 駅・空港・飛行機・旅客船と、路線ごとの列車アイコン（train-<路線id>）を登録する。
+ * 駅・空港・飛行機・船（貨物船とそれ以外）と、路線ごとの列車アイコン（train-<路線id>）を登録する。
  * 登録した（トラッキング中の）ものは縁取りを太くした「-fav」付きの名前で別に登録する
  */
 export async function addIcons(map: MLMap, lines: { id: string; color: string }[]) {
@@ -68,7 +69,8 @@ export async function addIcons(map: MLMap, lines: { id: string; color: string }[
       [`station${fav}`, station(o)],
       [`plane-domestic${fav}`, plane(PLANE_COLORS.domestic, o)],
       [`plane-international${fav}`, plane(PLANE_COLORS.international, o)],
-      [`ship${fav}`, ship(o)],
+      [`ship${fav}`, ship(SHIP_COLOR, o)],
+      [`cargo${fav}`, ship(CARGO_COLOR, o)],
       ...lines.map((l): [string, string] => [`train-${l.id}${fav}`, train(l.color, o)]),
     );
   }

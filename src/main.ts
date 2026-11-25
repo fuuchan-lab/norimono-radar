@@ -1,3 +1,4 @@
+import { initAds } from './ads';
 import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -6,8 +7,8 @@ import './style.css';
 import { buildRoutes, distKm, loadData, type Airport, type GeoJSONData, type Line, type Route, type Timetable, type Train } from './data';
 import { aircraftAt, aircraftLabel, fetchAircraft, LIVE_API, type Aircraft } from './aircraft';
 import { inArea, setArea, type AreaFeature } from './area';
-import { addIcons, PLANE_COLORS, SHIP_COLOR } from './icons';
-import { fetchShips, shipAt, shipLabel, type Ship } from './ships';
+import { addIcons, CARGO_COLOR, PLANE_COLORS, SHIP_COLOR } from './icons';
+import { fetchShips, isCargo, shipAt, shipKind, shipLabel, type Ship } from './ships';
 import { estimateFerries, hhmm, loadFerries, withoutReceived, type FerryShip } from './ferries';
 import { advance, formatTime, jstNowMinutes, placeAt, stateAt, trainId, type TrainState } from './simulate';
 import { airportByCode, airportCode, isJapanAirport } from './names-en';
@@ -57,9 +58,9 @@ const SEA = '#bed2ff'; // 地理院タイル（淡色地図）の海の色
 // 配色ごとの色。ダークモードは地図の画像を反転して暗くし、範囲の外は海より暗い色にする
 const PALETTE = {
   light: { sea: SEA, outside: '#ffffff', eez: '#3d6fb6', casing: '#ffffff', text: '#222222', textMuted: '#4a5568', halo: '#ffffff',
-    ship: SHIP_COLOR, plane: '#8a6a00', planeIntl: '#d6247e', selectedFill: 'rgba(0,0,0,0)' },
+    ship: SHIP_COLOR, cargo: CARGO_COLOR, plane: '#8a6a00', planeIntl: '#d6247e', selectedFill: 'rgba(0,0,0,0)' },
   dark: { sea: '#1a2332', outside: '#0b0f14', eez: '#7fa8e0', casing: '#0b0f14', text: '#e6edf3', textMuted: '#aab4c2', halo: '#0b0f14',
-    ship: '#5fc4ff', plane: '#ffd84d', planeIntl: '#ff8fc4', selectedFill: 'rgba(255,255,255,0.6)' },
+    ship: '#5fc4ff', cargo: '#d9a866', plane: '#ffd84d', planeIntl: '#ff8fc4', selectedFill: 'rgba(255,255,255,0.6)' },
 };
 
 const style: StyleSpecification = {
@@ -175,6 +176,7 @@ const isFerry = (s: Ship): s is FerryShip => 'est' in s;
 const LIVE_INTERVAL_MS = 30_000;
 const showPlanes = { domestic: loadSetting('planes.domestic', true), international: loadSetting('planes.international', true) };
 let showShips = loadSetting('ships', true);
+let showCargo = loadSetting('cargo', true);
 let showRain = loadSetting('rain', false);
 function loadSetting(key: string, fallback: boolean): boolean {
   try {
@@ -405,7 +407,7 @@ function applyMapTheme() {
   };
   text('airport', c.textMuted);
   text('station', c.text);
-  text('ships-label', c.ship);
+  text('ships-label', ['case', ['get', 'cargo'], c.cargo, c.ship]);
   text('aircraft-label', ['case', ['get', 'intl'], c.planeIntl, c.plane]);
   // 列車の名前は路線の色。ダークでは暗い路線色が沈むので明るい文字にする
   text('trains-label', dark ? c.text : ['get', 'color']);
@@ -501,7 +503,7 @@ function addLayers() {
   map.addLayer({
     id: 'ships', type: 'symbol', source: 'ships',
     layout: {
-      'icon-image': ['case', FAV, 'ship-fav', 'ship'],
+      'icon-image': ['concat', ['case', ['get', 'cargo'], 'cargo', 'ship'], ['case', FAV, '-fav', '']],
       'icon-size': ['interpolate', ['linear'], ['zoom'], 4, 0.45, 7, 0.65, 10, 0.95],
       'icon-rotate': ['get', 'heading'],
       'icon-rotation-alignment': 'map',
@@ -707,6 +709,24 @@ function buildLineFilter() {
       });
       nav.appendChild(b);
     }
+    // 貨物船（タンカーを含む）。AIS の船種で分けるので中継サーバーがあるときだけ
+    if (LIVE_API) {
+      const cargo = document.createElement('button');
+      cargo.type = 'button';
+      cargo.className = `chip ${showCargo ? 'on' : ''}`;
+      cargo.style.setProperty('--c', CARGO_COLOR);
+      cargo.innerHTML = `<span class="ship-mark"></span>${t().cargo}`;
+      cargo.setAttribute('aria-pressed', String(showCargo));
+      cargo.addEventListener('click', () => {
+        showCargo = !showCargo;
+        saveSetting('cargo', showCargo);
+        saveSettings({ cargo: showCargo });
+        cargo.classList.toggle('on', showCargo);
+        cargo.setAttribute('aria-pressed', String(showCargo));
+        drawLive();
+      });
+      nav.appendChild(cargo);
+    }
     nav.appendChild(ship);
     nav.appendChild(Object.assign(document.createElement('span'), { className: 'chip-sep' }));
   }
@@ -840,10 +860,11 @@ function drawLive() {
   // フェリーは表示している時刻（列車と同じ）で推定する。日付は日本時間の今日
   const today = Math.floor((ms + 9 * 3600 * 1000) / 86400000);
   ferryShips = withoutReceived(estimateFerries(nowMinutes(), today, ms), ships).filter((f) => inArea(f.pos));
-  const shipList = showShips ? allShips() : [];
+  // 貨物船（タンカーを含む）とそれ以外を別々に切り替える。時刻表からの推定のフェリーは「それ以外」
+  const shipList = allShips().filter((s) => (isCargo(s.type) ? showCargo : showShips));
   setData('ships', shipList.map((s) => ({
     type: 'Feature',
-    properties: { mmsi: s.mmsi, heading: s.heading ?? 0, label: shipLabel(s), fav: shipFav(s), est: isFerry(s) },
+    properties: { mmsi: s.mmsi, heading: s.heading ?? 0, label: shipLabel(s), fav: shipFav(s), est: isFerry(s), cargo: isCargo(s.type) },
     geometry: { type: 'Point', coordinates: isFerry(s) ? s.pos : shipAt(s, ms) },
   })));
 
@@ -1141,10 +1162,10 @@ function shipSheet(mmsi: number): string {
   rows.push(['MMSI', String(s.mmsi)]);
   const age = Math.round((Date.now() - s.at) / 1000);
   return `
-    <div class="sheet-head" style="--c:${SHIP_COLOR}">
+    <div class="sheet-head" style="--c:${isCargo(s.type) ? CARGO_COLOR : SHIP_COLOR}">
       <span class="ship-mark big"></span>
       <h2>${escapeHtml(shipLabel(s))}</h2>
-      <span class="badge-type ship">${tx.ship}</span>
+      <span class="badge-type ship">${tx.shipTypes[shipKind(s.type)]}</span>
       ${favButton('ship', String(s.mmsi), shipLabel(s))}
     </div>
     <dl class="facts">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
@@ -1503,6 +1524,11 @@ function applySavedSettings() {
     saveSetting('ships', s.ships);
     layers = true;
   }
+  if (s.cargo !== undefined && s.cargo !== showCargo) {
+    showCargo = s.cargo;
+    saveSetting('cargo', s.cargo);
+    layers = true;
+  }
   if (s.rain !== undefined && s.rain !== showRain) {
     showRain = s.rain;
     saveSetting('rain', s.rain);
@@ -1548,7 +1574,7 @@ function renderSettingsInfo() {
   const tx = t();
   const shownLines = lines.filter((l) => !hiddenLines.has(l.id)).map((l) => lineShort(l));
   const layers = [
-    showPlanes.domestic ? tx.domestic : '', showPlanes.international ? tx.international : '', showShips ? tx.ships : '', showRain ? tx.rain : '',
+    showPlanes.domestic ? tx.domestic : '', showPlanes.international ? tx.international : '', showCargo ? tx.cargo : '', showShips ? tx.ships : '', showRain ? tx.rain : '',
     shownLines.length === lines.length ? tx.allLines : shownLines.join('・'),
   ].filter(Boolean).join('、');
   const rows: [string, string][] = [
@@ -1693,7 +1719,7 @@ function renderMyPanel() {
     return row('ship', f.id, f.label, `${s.moving ? tx.underway : tx.moored} · ${tx.minutesAgo(Math.round((now - s.at) / 60000))}`, `ship:${s.mmsi}`);
   });
   const favStations = fav.station.map((f) => row('station', f.id, tx.stationOf(station(f.id)), tx.openTimetable, `station:${f.id}`));
-  const lists = section(tx.trains, trains) + section(tx.aircraft, planes) + section(tx.ships, boats) + section(tx.stations, favStations);
+  const lists = section(tx.trains, trains) + section(tx.aircraft, planes) + section(tx.vessels, boats) + section(tx.stations, favStations);
 
   el.innerHTML = `
     <h2>${tx.myList}</h2>
@@ -1830,6 +1856,7 @@ function markAndroidApp() {
   document.documentElement.classList.toggle('in-app', inApp);
 }
 markAndroidApp();
+initAds();
 
 // data-doc の付いたリンクは、新しいタブではなく重ねて開く（言語に合わせて英語の部分へ）
 document.addEventListener('click', (e) => {
@@ -1918,7 +1945,7 @@ function renderSearch() {
     const r = f ? match(s.name, f.route.name, f.route.nameEn, f.route.op, f.route.opEn) : match(s.name, String(s.mmsi));
     const label = shipLabel(s);
     const sub = f ? `${lang === 'en' ? f.route.opEn : f.route.op} · ${tx.badge}` : '';
-    if (r >= 0) hits.push({ kind: tx.ships, label, sub, open: () => openShip(s.mmsi), rank: r });
+    if (r >= 0) hits.push({ kind: tx.vessels, label, sub, open: () => openShip(s.mmsi), rank: r });
   }
   const shown = hits.sort((x, y) => x.rank - y.rank).slice(0, 40);
   searchHits = shown.map((h) => h.open);

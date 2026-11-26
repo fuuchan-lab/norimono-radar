@@ -31,7 +31,7 @@ export function initAds(): void {
   ins.className = 'adsbygoogle';
   ins.dataset.adClient = ADSENSE_CLIENT;
   ins.dataset.adSlot = ADSENSE_SLOT;
-  ins.dataset.adFormat = 'horizontal';
+  ins.style.cssText = 'display:inline-block;width:320px;height:50px';
   banner.append(ins);
   document.body.append(banner);
 

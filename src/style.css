@@ -427,10 +427,10 @@ html:not([lang='en']) [data-lang='en'], html[lang='en'] [data-lang='ja'] { displ
 /* 画面の下の広告（src/ads.ts。ID が入っている時だけ作られる）。スマホは、メニューの真上 */
 .ad-banner {
   position: fixed; left: 0; right: 0; bottom: var(--nav-h); z-index: 24;
-  max-height: 100px; overflow: hidden; text-align: center;
+  max-height: 50px; overflow: hidden; text-align: center;
   background: var(--glass); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
 }
-.ad-banner ins { display: block; max-height: 100px; }
+.ad-banner ins { display: block; max-height: 50px; }
 .ad-banner:not(:has(ins[data-ad-status='filled'])) { visibility: hidden; }
 /* 現在地はメニューから。地図の現在地ボタンは隠す */
 .maplibregl-ctrl-group:has(.maplibregl-ctrl-geolocate) { display: none; }

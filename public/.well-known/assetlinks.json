@@ -1,11 +1,16 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "net.doitmyself.norimonoradar",
       "sha256_cert_fingerprints": [
-        "A2:24:58:A7:F6:29:5E:E0:F3:10:34:E5:21:E5:20:29:AC:A9:B8:C8:11:EC:5D:F6:AA:C5:06:42:22:BF:45:17"
+        "A2:24:58:A7:F6:29:5E:E0:F3:10:34:E5:21:E5:20:29:AC:A9:B8:C8:11:EC:5D:F6:AA:C5:06:42:22:BF:45:17",
+        "7B:97:72:79:B8:93:E6:17:B0:5A:3B:96:95:28:87:8F:D7:07:D1:DC:D4:F3:30:89:D1:C1:BF:1A:19:33:CF:4D",
+        "63:33:93:3B:55:47:6D:9E:B1:44:27:F4:87:A7:35:1F:A7:BE:60:66:7A:65:2D:F9:06:06:49:D0:F6:17:87:D7",
+        "E7:65:25:87:BD:7A:9D:74:9D:CA:F7:84:91:6D:17:04:7A:54:DD:87:CF:A6:BE:56:B6:8A:7A:EB:B5:58:98:EF"
       ]
     }
   }
